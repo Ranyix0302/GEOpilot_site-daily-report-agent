@@ -28,7 +28,7 @@ LARK_BASE_APP_TOKEN=目标多维表格 URL 中的 app_token
 LARK_TABLE_ID=目标数据表 URL 中的 table_id
 ```
 
-不要在 Key 两边加引号，也不要把 `.env` 发给别人或提交到 Git。Agent 只从后端读取 API Key；密钥不会进入前端代码。只要设置了 `LLM_GATEWAY_URL`，系统就优先使用比赛 Gateway；否则沿用本机 DeepSeek 配置。
+不要在 Key 两边加引号，也不要把 `.env` 发给别人或提交到 Git。Agent 只从后端读取 API Key；密钥不会进入前端代码。只要设置了 `LLM_GATEWAY_URL`，系统就优先使用比赛 Gateway；否则沿用本机 DeepSeek 配置。比赛 Gateway 按主办方 Starter Kit 使用 Ollama 兼容的 `/api/chat` 协议和 `X-API-Key` 请求头，图片以消息的 `images` 字段发送。
 
 图片识别先在本机自动准备候选区域：Operation 照片优先识别控制屏右上桩号区域，Silo 照片优先定位红色 LED 区域。候选区域无法得到有效结果时自动回退到原图。置信度低于 `VISION_CONFIDENCE_THRESHOLD` 的记录会进入预警，要求工程师在审核 Word 中对照原图。
 

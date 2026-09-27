@@ -108,13 +108,14 @@ class DeepSeekVisionTests(unittest.TestCase):
         self.assertTrue(url.startswith("data:image/jpeg;base64,"))
         self.assertNotIn("test-key", str(args["json"]))
 
-    def test_request_uses_competition_gateway_without_deepseek_extensions(self):
+    def test_request_uses_competition_ollama_gateway_with_image(self):
         path = self.make_image(size=(400, 300))
         prepared = prepare_candidates(path, "other")[0]
         response = Mock()
         response.raise_for_status.return_value = None
         response.json.return_value = {
-            "choices": [{"message": {"content": '{"is_target":true,"pile_no":"B-2"}'}}]
+            "message": {"content": '{"is_target":true,"pile_no":"B-2"}'},
+            "done": True,
         }
         with patch.dict(os.environ, {
             "LLM_GATEWAY_URL": "https://api.softwaresystems.app/",
@@ -127,14 +128,23 @@ class DeepSeekVisionTests(unittest.TestCase):
         self.assertEqual(result["pile_no"], "B-2")
         self.assertEqual(
             post.call_args.args[0],
-            "https://api.softwaresystems.app/v1/chat/completions",
+            "https://api.softwaresystems.app/api/chat",
         )
         args = post.call_args.kwargs
-        self.assertEqual(args["headers"]["Authorization"], "Bearer gateway-test-key")
+        self.assertEqual(args["headers"]["X-API-Key"], "gateway-test-key")
+        self.assertNotIn("Authorization", args["headers"])
         self.assertEqual(
             args["json"]["model"],
             "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
         )
+        self.assertFalse(args["json"]["stream"])
+        self.assertEqual(args["json"]["format"], "json")
+        self.assertEqual(args["json"]["options"]["temperature"], 0)
+        message = args["json"]["messages"][0]
+        self.assertEqual(message["content"], "prompt")
+        self.assertEqual(len(message["images"]), 1)
+        self.assertNotIn("data:image", message["images"][0])
+        self.assertNotIn("gateway-test-key", str(args["json"]))
         self.assertNotIn("response_format", args["json"])
         self.assertNotIn("thinking", args["json"])
 

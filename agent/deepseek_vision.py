@@ -297,8 +297,7 @@ class DeepSeekVision:
                 os.getenv("LLM_MODEL", "global.anthropic.claude-sonnet-4-5-20250929-v1:0").strip()
                 or "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
             )
-            gateway_url = gateway_url.rstrip("/")
-            self.base_url = gateway_url if gateway_url.endswith("/v1") else f"{gateway_url}/v1"
+            self.base_url = gateway_url.rstrip("/")
         else:
             self.api_key = os.getenv("DEEPSEEK_API_KEY", "").strip()
             self.model = os.getenv("DEEPSEEK_MODEL", "deepseek-flash").strip() or "deepseek-flash"
@@ -327,36 +326,66 @@ class DeepSeekVision:
             variable = "LLM_GATEWAY_API_KEY" if self.gateway_mode else "DEEPSEEK_API_KEY"
             raise DeepSeekError(f"尚未设置 {variable}。请把密钥放入项目 .env 文件后重启。")
         encoded = base64.b64encode(prepared.data).decode("ascii")
-        payload = {
-            "model": self.model,
-            "messages": [{
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": prompt},
-                    {"type": "image_url", "image_url": {
-                        "url": f"data:{prepared.mime_type};base64,{encoded}"
-                    }},
-                ],
-            }],
-            "temperature": 0,
-            "max_tokens": 300,
-        }
-        if not self.gateway_mode:
-            payload.update({
+        if self.gateway_mode:
+            # The competition gateway follows Ollama's native /api/chat
+            # protocol. Images belong in the message-level ``images`` array as
+            # raw base64; OpenAI's data-URL content parts are not forwarded as
+            # vision input by this endpoint.
+            endpoint = f"{self.base_url}/api/chat"
+            headers = {
+                "X-API-Key": self.api_key,
+                "Content-Type": "application/json",
+            }
+            payload = {
+                "model": self.model,
+                "messages": [{
+                    "role": "user",
+                    "content": prompt,
+                    "images": [encoded],
+                }],
+                "stream": False,
+                "format": "json",
+                "options": {
+                    "temperature": 0,
+                    "num_predict": 300,
+                },
+            }
+        else:
+            endpoint = f"{self.base_url}/chat/completions"
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+            }
+            payload = {
+                "model": self.model,
+                "messages": [{
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt},
+                        {"type": "image_url", "image_url": {
+                            "url": f"data:{prepared.mime_type};base64,{encoded}"
+                        }},
+                    ],
+                }],
+                "temperature": 0,
+                "max_tokens": 300,
                 "response_format": {"type": "json_object"},
                 # OCR/classification does not benefit from billed chain-of-thought.
                 "thinking": {"type": "disabled"},
-            })
+            }
         try:
             response = requests.post(
-                f"{self.base_url}/chat/completions",
-                headers={"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"},
+                endpoint,
+                headers=headers,
                 json=payload,
                 timeout=self.timeout,
             )
             response.raise_for_status()
             body = response.json()
-            content = body.get("choices", [{}])[0].get("message", {}).get("content", "")
+            if self.gateway_mode:
+                content = body.get("message", {}).get("content", "")
+            else:
+                content = body.get("choices", [{}])[0].get("message", {}).get("content", "")
             if isinstance(content, list):
                 content = "".join(str(item.get("text", "")) for item in content if isinstance(item, dict))
             if not isinstance(content, str) or not content.strip():
