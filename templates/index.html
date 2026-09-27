@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Site Daily Report Agent</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%231f5eff'/%3E%3Cpath d='M18 40h28M18 30h28M18 20h18' stroke='white' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='extra.css', v='ui-polish-2') }}" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-lockup">
+        <div class="brand-mark">SD</div>
+        <div><strong>Site Daily Report</strong><span>Agent workspace</span></div>
+      </div>
+      <div class="topbar-right">
+        <div class="language-switcher" role="group" aria-label="Language"><span data-i18n="language">Language</span><button type="button" data-lang="en" class="active">EN</button><button type="button" data-lang="zh">中文</button></div>
+        <span class="secure-pill" id="modelStatus"><i></i> <span data-i18n="statusChecking">Checking model connection</span></span>
+        <span class="user-chip" data-i18n="workspace">Engineer workspace</span>
+      </div>
+    </header>
+
+    <div class="app-body">
+      <aside class="sidebar">
+        <div class="date-card">
+          <span class="eyebrow" data-i18n="reportDate">Report date</span>
+          <label class="date-input"><input id="reportDate" type="date" value="2026-09-26" /><span>⌄</span></label>
+          <p data-i18n-html="timeWindow">Window: <b>07:00</b> → next day <b>07:00</b></p>
+        </div>
+        <nav class="step-nav" aria-label="Processing workflow">
+          <button class="step-item active" data-stage="construction"><span class="step-num">1</span><span><b data-i18n="navConstruction">Construction review</b><small data-i18n="navConstructionSub">Independent upload · DCM-1 to DCM-8</small></span><em>Pending</em></button>
+          <button class="step-item" data-stage="operation"><span class="step-num">2</span><span><b data-i18n="navOperation">Operation group</b><small data-i18n="navOperationSub">Independent upload · identify operator</small></span><em>Pending</em></button>
+          <button class="step-item" data-stage="silo"><span class="step-num">3</span><span><b data-i18n="navSilo">Silo Operation group</b><small data-i18n="navSiloSub">Independent upload · cement reading ÷ 2</small></span><em>Pending</em></button>
+          <button class="step-item" data-stage="final"><span class="step-num">4</span><span><b data-i18n="navFinal">Combined preview &amp; sync</b><small data-i18n="navFinalSub">Merge all uploaded data</small></span><em>Available</em></button>
+          <button class="step-item analysis-nav hidden-panel" data-stage="analysis"><span class="step-num">◇</span><span><b data-i18n="navAnalysis">Operator work analysis</b><small data-i18n="navAnalysisSub">Day / night shift summary</small></span><em>Locked</em></button>
+        </nav>
+        <div class="sidebar-footer">
+          <div class="roster-uploader">
+            <div class="roster-heading">
+              <strong data-i18n="rosterTitle">Operator mapping</strong>
+              <span data-i18n="rosterHint">Account Name ↔ Full Name</span>
+            </div>
+            <button class="roster-upload-button" id="rosterBtn" type="button">
+              <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
+                <path d="M6.5 2.5h5l3.5 3.5v9.5a2 2 0 0 1-2 2H6.5a2 2 0 0 1-2-2v-11a2 2 0 0 1 2-2Z" />
+                <path d="M11.5 2.5V6H15M10 9v5M7.5 11.5h5" />
+              </svg>
+              <span data-i18n="rosterAction">Upload Excel</span>
+            </button>
+            <input id="rosterInput" type="file" accept=".xlsx,.xlsm" hidden />
+          </div>
+          <div class="privacy-note"><span>▣</span><span data-i18n-html="privacy">Data is processed only by the backend<br/>The browser never asks for an API key</span></div>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <section class="page-heading">
+          <div><span class="eyebrow">DAILY REPORT / 01</span><h1 id="stageTitle">Construction review group</h1><p id="stageDescription">Process TXT files for active DCM equipment and merge records by pile number.</p></div>
+          <div class="heading-actions"><button class="ghost-button" id="downloadStage" data-i18n="downloadReview" disabled>↓ Download review files</button><button class="primary-button" id="nextStage"><span data-i18n="confirmStage">Confirm this stage</span> <span>✓</span></button></div>
+        </section>
+
+        <section class="stage-panel" id="constructionPanel">
+          <div class="panel-heading"><div><h2 data-i18n="chooseConstruction">Choose construction chat files</h2><p data-i18n="chooseConstructionHelp">Select TXT files only for equipment that worked that day. Unselected equipment is treated as inactive.</p></div><span class="progress-label"><b id="uploadCount">0</b>/8 <span data-i18n="devicesSelected">devices selected</span></span></div>
+          <div class="device-grid" id="deviceGrid"></div>
+          <div class="confirm-strip"><div><strong id="constructionConfirmTitle" data-i18n="chooseWorkingFiles">Select files for active equipment</strong><span id="constructionConfirmHint" data-i18n="chooseWorkingHint">Select at least one file and verify that each file is assigned to the correct DCM card.</span></div><button class="primary-button" id="confirmConstruction" data-i18n="confirmFiles" disabled>Confirm files and start processing</button></div>
+          <div class="stage-downloads locked-download" id="constructionDownloads"><div><strong data-i18n="constructionExcel">Construction review Excel</strong><span data-i18n="constructionExcelHelp">After processing, download the Excel sorted by Point Complete Time.</span></div><div class="download-actions"><button class="ghost-button" id="downloadConstructionExcel" data-i18n="downloadConstructionExcel" disabled>↓ Download construction review Excel</button></div></div>
+        </section>
+
+        <section class="stage-panel hidden-panel" id="zipUploadPanel">
+          <div class="panel-heading"><div><h2 id="zipTitle">Upload Operation group ZIP</h2><p id="zipDescription" data-i18n="zipDescription">The ZIP should contain an exported WhatsApp TXT chat and its images.</p></div><span class="upload-format" data-i18n="zipSupported">Supports .ZIP</span></div>
+          <div class="zip-dropzone" id="zipDropzone"><div class="zip-icon">↑</div><div><strong id="zipDropTitle" data-i18n="dropZip">Drop a ZIP file here, or click to select</strong><span id="zipDropHint">Example: Operation group export.zip</span></div><button class="ghost-button" id="chooseZip" data-i18n="chooseZip">Choose ZIP file</button><input id="zipInput" type="file" accept=".zip" hidden /></div>
+          <div class="file-review hidden-panel" id="zipFileReview"><div class="file-review-info"><span class="file-badge" data-i18n="pending">Pending</span><strong id="selectedZipName"></strong><small id="selectedZipSize"></small><div class="progress-track hidden-panel" id="zipProgressWrap"><div id="zipProgressBar"></div></div></div><button class="primary-button" id="confirmZip" data-i18n="confirmZip">Confirm file and start processing</button></div>
+          <div class="stage-note" id="stageNote" data-i18n="stageNote">Check the filename first. The system uploads and recognizes only after confirmation.</div>
+        </section>
+
+        <section class="workspace-grid" id="workspaceGrid">
+          <section class="preview-panel card">
+            <div class="card-heading"><div><span class="eyebrow" data-i18n="previewTable">PREVIEW TABLE</span><h2 data-i18n="feishuPreview">Feishu-format preview</h2></div><span class="record-count"><b id="recordCount">0</b> <span data-i18n="records">records</span></span></div>
+            <div class="table-toolbar"><div class="toolbar-left"><button class="toolbar-button active" data-i18n="table">▦ Table</button><button class="toolbar-button" data-i18n="sort">↕ Sort by completion time</button><button class="toolbar-button" data-i18n="filter">⌕ Filter</button></div><span class="edit-hint" data-i18n="editHint">Double-click a cell to edit</span></div>
+            <div class="table-scroll"><table id="previewTable"><thead><tr><th>Date</th><th>Pile NO.</th><th>Equipment NO.</th><th>Drilling Start Time</th><th>Drilling Complete Time</th><th>Point Complete Time</th><th>Operator</th><th>Cement Content</th></tr></thead><tbody></tbody></table></div>
+            <div class="table-footer"><span>Showing 0 records · Point Complete Time ascending</span><button class="link-button" id="addRow" data-i18n="addRecord">＋ Add record</button></div>
+          </section>
+          <aside class="alerts-panel card" id="alertsPanel"><div class="card-heading"><div><span class="eyebrow warning-eyebrow" data-i18n="contentCheck">CONTENT CHECK</span><h2 data-i18n="contentAlerts">Content alerts</h2></div><span class="alert-count" id="alertCount">0</span></div><div class="alert-list" id="alertList"></div><div class="alerts-footer"><span data-i18n="alertsNotWritten">Alerts are not written to Feishu automatically</span><button class="link-button" id="showAllAlerts" data-i18n="viewAll">View all →</button></div></aside>
+        </section>
+
+        <section class="analysis-panel card hidden-panel" id="operatorAnalysisPanel"><div class="card-heading"><div><span class="eyebrow teal-eyebrow" data-i18n="operatorInsights">OPERATOR INSIGHTS</span><h2 data-i18n="operatorAnalysis">Operator work analysis</h2><p data-i18n="operatorAnalysisHelp">An independent summary of objective workload and effective time for engineer review.</p></div><span class="analysis-date" data-i18n="shiftWindow">Day 07:00–19:00 · Night 19:00–next day 07:00</span></div><div class="stats-strip"></div><div class="operator-table-wrap"></div></section>
+
+        <section class="bottom-actions" id="bottomActions"><div class="run-log"><span class="run-dot"></span><span id="runLog" data-i18n="starting">Starting Agent…</span></div><div><button class="secondary-button" id="saveDraft" data-i18n="saveChanges">Save current changes</button><button class="primary-button large" id="finalWrite"><span data-i18n="syncFeishu">Save preview and sync to Feishu</span> <span>→</span></button></div></section>
+      </main>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+  <script src="{{ url_for('static', filename='i18n.js', v='ui-polish-1') }}"></script>
+  <script src="{{ url_for('static', filename='app.js', v='ui-polish-1') }}"></script>
+</body>
+</html>

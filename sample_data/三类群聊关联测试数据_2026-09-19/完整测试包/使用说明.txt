@@ -1,0 +1,20 @@
+﻿三类群聊关联测试数据 · 2026-09-19
+
+日报日期选择：2026-09-19（时间窗：2026-09-19 07:00 至 2026-09-20 07:00）
+
+上传方式：
+1. 施工审核群聊：解压 01_施工审核群聊.zip，选择当天有记录的 DCM-1 至 DCM-8 TXT；没有记录的设备不必上传。
+2. Operation 群聊：直接上传 02_Operation群聊.zip。
+3. Silo Operation 群聊：直接上传 03_Silo_Operation群聊.zip。
+4. 名称映射使用随包提供的 names.xlsx。Operation TXT 的发送账号只使用 Account Name 列中的 Raj、Dev、Arjun、Vikram、Aditya、Rohit、Karan、Sidd，因此可按 Full Name 列匹配预览表 Operator。
+
+数据关联：
+- 13 个施工桩号覆盖 Operation 的 8 个桩号及 Silo 的 5 个桩号，供系统按 Pile NO. 合并。
+- Silo 仪表红色读数预期分别为 10、33、6、21、3；写入 Cement Content 前除以 2。
+- Operation 的 G12-R1-16 被安排了多张图片，用于检查同桩多图/重复上传警示；两张无可见 WhatsApp 发件人信息的单图使用 Demo-* 合成发件人。
+- Operation TXT 中的账号名是为完整测试映射流程而使用的合成账号，严格来自 names.xlsx 左列；Agent 应以 TXT 的发送账号映射右列全名。原始图片内部可能显示不同真实群聊名称，图片本身不修改，识别只读取目标机器桩号。
+
+时间说明：
+- 三类 TXT 的 WhatsApp 消息头是为同一日报窗口合成的标准导出格式，确保可测试窗口过滤和跨群合并。
+- 原始图片未修改；图片里嵌入的拍摄时间可能与合成的 WhatsApp 消息时间不同。系统应以 TXT 消息头时间作为发送时间。
+- 这是一套演示输入，所有施工记录中的字段、时间、RFI 号及合成消息头仅供测试，不代表真实日报。

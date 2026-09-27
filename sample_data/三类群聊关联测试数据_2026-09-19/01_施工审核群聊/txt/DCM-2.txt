@@ -1,0 +1,41 @@
+﻿此聊天以端到端加密。
+[2026-09-19 13:05:00] Site Report: Project : T5 Megaspine
+Company : KB (Geoharbour)
+Date :2026/09/19
+Location : DSM open cut South area 5A ZONE: E-E
+KB GH:01
+Point No: G12-R1-16
+RFI no: MSP_CR-RFIw-TEST
+
+Ground level: +5.85mSHD
+Main Grouting Top L:-7.00mSHD
+Main Grouting Toe L:-25.00mSHD
+
+Drilling start time:11:37hrs
+Drilling complete time:12:55hrs
+Drilling depth:30.85 m
+Grouting density:1.51kg/L
+Main Grouting start time:08:12hrs
+Main Grouting end time:08:40hrs
+Point complete time:13:05hrs
+Total volume:16,420L
+[2026-09-19 11:03:00] Site Report: Project : T5 Megaspine
+Company : KB (Geoharbour)
+Date :2026/09/19
+Location : DSM open cut South area 5A ZONE: E-E
+KB GH:01
+Point No: G12-R1-15
+RFI no: MSP_CR-RFIw-TEST
+
+Ground level: +5.85mSHD
+Main Grouting Top L:-7.00mSHD
+Main Grouting Toe L:-25.00mSHD
+
+Drilling start time:10:00hrs
+Drilling complete time:10:45hrs
+Drilling depth:30.85 m
+Grouting density:1.51kg/L
+Main Grouting start time:08:12hrs
+Main Grouting end time:08:40hrs
+Point complete time:11:03hrs
+Total volume:16,420L
