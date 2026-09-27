@@ -24,11 +24,14 @@ class BilingualUiTests(unittest.TestCase):
         self.assertIn('data-i18n="rosterHint"', html)
         self.assertIn('data-i18n="rosterAction"', html)
         self.assertIn('viewBox="0 0 20 20"', html)
+        self.assertIn('id="confirmDialog"', html)
 
         with open("static/app.js", encoding="utf-8") as app_js:
             script = app_js.read()
         self.assertIn('class="upload-icon" aria-hidden="true"', script)
         self.assertNotIn('class="upload-icon">↑</span>', script)
+        self.assertNotIn("if(!confirm(", script)
+        self.assertIn("askConfirmation", script)
 
     def test_status_names_competition_gateway_provider(self):
         with patch.dict(os.environ, {

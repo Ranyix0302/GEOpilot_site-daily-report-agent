@@ -6,7 +6,7 @@
   <title>Site Daily Report Agent</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%231f5eff'/%3E%3Cpath d='M18 40h28M18 30h28M18 20h18' stroke='white' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E" />
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='extra.css', v='ui-polish-2') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='extra.css', v='confirm-dialog-1') }}" />
 </head>
 <body>
   <div class="app-shell">
@@ -91,8 +91,18 @@
       </main>
     </div>
   </div>
+  <dialog class="confirm-dialog" id="confirmDialog" aria-labelledby="confirmDialogTitle">
+    <div class="confirm-dialog-card">
+      <h2 id="confirmDialogTitle" data-i18n="confirmDialogTitle">Please confirm</h2>
+      <p id="confirmDialogMessage"></p>
+      <div class="confirm-dialog-actions">
+        <button type="button" class="secondary-button" id="confirmDialogCancel" data-i18n="cancelAction">Cancel</button>
+        <button type="button" class="primary-button" id="confirmDialogAccept" data-i18n="confirmAction">Confirm</button>
+      </div>
+    </div>
+  </dialog>
   <div class="toast" id="toast" role="status"></div>
-  <script src="{{ url_for('static', filename='i18n.js', v='ui-polish-1') }}"></script>
-  <script src="{{ url_for('static', filename='app.js', v='ui-polish-1') }}"></script>
+  <script src="{{ url_for('static', filename='i18n.js', v='confirm-dialog-1') }}"></script>
+  <script src="{{ url_for('static', filename='app.js', v='confirm-dialog-1') }}"></script>
 </body>
 </html>

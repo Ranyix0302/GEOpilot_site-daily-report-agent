@@ -43,7 +43,7 @@ vm.runInContext(i18nSource, context);
 const source = fs.readFileSync(path.join(__dirname, '../static/app.js'), 'utf8');
 vm.runInContext(source.slice(0, source.lastIndexOf('init().catch')), context);
 const run = text => vm.runInContext(text, context);
-run('renderStageStatus=()=>{};toast=()=>{};updateInterface=()=>{};');
+run('renderStageStatus=()=>{};toast=()=>{};updateInterface=()=>{};askConfirmation=async()=>true;');
 
 async function main() {
   assert.equal(run("t('dropZip')"), 'Drop a ZIP file here, or click to select');
