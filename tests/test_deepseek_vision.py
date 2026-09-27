@@ -71,7 +71,7 @@ class DeepSeekVisionTests(unittest.TestCase):
 
     def test_invalid_crop_result_falls_back_to_original(self):
         path = self.make_image()
-        with patch.dict(os.environ, {"DEEPSEEK_API_KEY": "test-key"}, clear=False):
+        with patch.dict(os.environ, {"DEEPSEEK_API_KEY": "test-key"}, clear=True):
             vision = DeepSeekVision()
         with patch.object(vision, "_request", side_effect=[
             {"is_target": False, "pile_no": "", "confidence": 0.2},
@@ -95,7 +95,7 @@ class DeepSeekVisionTests(unittest.TestCase):
             "DEEPSEEK_API_KEY": "test-key",
             "DEEPSEEK_MODEL": "deepseek-flash",
             "DEEPSEEK_BASE_URL": "https://api.deepseek.test",
-        }, clear=False):
+        }, clear=True):
             vision = DeepSeekVision()
         with patch("agent.deepseek_vision.requests.post", return_value=response) as post:
             result = vision._request("prompt", prepared)
@@ -107,6 +107,36 @@ class DeepSeekVisionTests(unittest.TestCase):
         url = args["json"]["messages"][0]["content"][1]["image_url"]["url"]
         self.assertTrue(url.startswith("data:image/jpeg;base64,"))
         self.assertNotIn("test-key", str(args["json"]))
+
+    def test_request_uses_competition_gateway_without_deepseek_extensions(self):
+        path = self.make_image(size=(400, 300))
+        prepared = prepare_candidates(path, "other")[0]
+        response = Mock()
+        response.raise_for_status.return_value = None
+        response.json.return_value = {
+            "choices": [{"message": {"content": '{"is_target":true,"pile_no":"B-2"}'}}]
+        }
+        with patch.dict(os.environ, {
+            "LLM_GATEWAY_URL": "https://api.softwaresystems.app/",
+            "LLM_GATEWAY_API_KEY": "gateway-test-key",
+            "LLM_MODEL": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+        }, clear=True):
+            vision = DeepSeekVision()
+        with patch("agent.deepseek_vision.requests.post", return_value=response) as post:
+            result = vision._request("prompt", prepared)
+        self.assertEqual(result["pile_no"], "B-2")
+        self.assertEqual(
+            post.call_args.args[0],
+            "https://api.softwaresystems.app/v1/chat/completions",
+        )
+        args = post.call_args.kwargs
+        self.assertEqual(args["headers"]["Authorization"], "Bearer gateway-test-key")
+        self.assertEqual(
+            args["json"]["model"],
+            "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+        )
+        self.assertNotIn("response_format", args["json"])
+        self.assertNotIn("thinking", args["json"])
 
 
 if __name__ == "__main__":

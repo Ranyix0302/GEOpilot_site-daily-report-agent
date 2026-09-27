@@ -289,9 +289,20 @@ def prepare_candidates(image_path: str, stage: str) -> list[PreparedImage]:
 
 class DeepSeekVision:
     def __init__(self, timeout: int = 90):
-        self.api_key = os.getenv("DEEPSEEK_API_KEY", "").strip()
-        self.model = os.getenv("DEEPSEEK_MODEL", "deepseek-flash").strip() or "deepseek-flash"
-        self.base_url = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com").rstrip("/")
+        gateway_url = os.getenv("LLM_GATEWAY_URL", "").strip()
+        self.gateway_mode = bool(gateway_url)
+        if self.gateway_mode:
+            self.api_key = os.getenv("LLM_GATEWAY_API_KEY", "").strip()
+            self.model = (
+                os.getenv("LLM_MODEL", "global.anthropic.claude-sonnet-4-5-20250929-v1:0").strip()
+                or "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
+            )
+            gateway_url = gateway_url.rstrip("/")
+            self.base_url = gateway_url if gateway_url.endswith("/v1") else f"{gateway_url}/v1"
+        else:
+            self.api_key = os.getenv("DEEPSEEK_API_KEY", "").strip()
+            self.model = os.getenv("DEEPSEEK_MODEL", "deepseek-flash").strip() or "deepseek-flash"
+            self.base_url = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com").rstrip("/")
         self.timeout = int(os.getenv("DEEPSEEK_TIMEOUT_SECONDS", str(timeout)))
 
     def available(self) -> bool:
@@ -313,7 +324,8 @@ class DeepSeekVision:
 
     def _request(self, prompt: str, prepared: PreparedImage) -> dict[str, Any]:
         if not self.api_key:
-            raise DeepSeekError("尚未设置 DEEPSEEK_API_KEY。请把密钥放入项目 .env 文件后重启。")
+            variable = "LLM_GATEWAY_API_KEY" if self.gateway_mode else "DEEPSEEK_API_KEY"
+            raise DeepSeekError(f"尚未设置 {variable}。请把密钥放入项目 .env 文件后重启。")
         encoded = base64.b64encode(prepared.data).decode("ascii")
         payload = {
             "model": self.model,
@@ -326,12 +338,15 @@ class DeepSeekVision:
                     }},
                 ],
             }],
-            "response_format": {"type": "json_object"},
-            # OCR/classification does not benefit from billed chain-of-thought.
-            "thinking": {"type": "disabled"},
             "temperature": 0,
             "max_tokens": 300,
         }
+        if not self.gateway_mode:
+            payload.update({
+                "response_format": {"type": "json_object"},
+                # OCR/classification does not benefit from billed chain-of-thought.
+                "thinking": {"type": "disabled"},
+            })
         try:
             response = requests.post(
                 f"{self.base_url}/chat/completions",

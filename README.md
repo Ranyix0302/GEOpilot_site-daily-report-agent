@@ -1,6 +1,6 @@
 # Site Daily Report Agent
 
-本机运行的 WhatsApp 施工日报 Agent。网页使用已确认的四阶段流程；DeepSeek API Key 和飞书凭证由后端从 `.env` 文件读取。
+WhatsApp 施工日报 Agent。网页使用已确认的四阶段流程；比赛 LLM Gateway（或本机 DeepSeek）及飞书凭证均由后端从 `.env` 文件读取。
 
 ## 先准备环境
 
@@ -10,12 +10,16 @@
 .\start.ps1
 ```
 
-在 `.env` 中填写 DeepSeek Key 和飞书配置，保存后再次运行 `start.ps1`：
+在 `.env` 中填写 DeepSeek Key 和飞书配置，保存后再次运行 `start.ps1`。部署到比赛 AWS 环境时，改用主办方提供的三个 `LLM_GATEWAY_*` 配置：
 
 ```dotenv
 DEEPSEEK_API_KEY=你的 DeepSeek API Key
 DEEPSEEK_MODEL=deepseek-flash
 DEEPSEEK_BASE_URL=https://api.deepseek.com
+# AWS 比赛部署使用以下三项，并删除或忽略上面的 DeepSeek 配置
+LLM_GATEWAY_URL=https://api.softwaresystems.app
+LLM_GATEWAY_API_KEY=主办方发给团队的 API Key
+LLM_MODEL=global.anthropic.claude-sonnet-4-5-20250929-v1:0
 VISION_CONFIDENCE_THRESHOLD=0.75
 LARK_APP_ID=飞书自建应用的 App ID
 LARK_APP_SECRET=飞书自建应用的 App Secret
@@ -24,7 +28,7 @@ LARK_BASE_APP_TOKEN=目标多维表格 URL 中的 app_token
 LARK_TABLE_ID=目标数据表 URL 中的 table_id
 ```
 
-不要在 Key 两边加引号，也不要把 `.env` 发给别人或提交到 Git。Agent 只从后端读取 DeepSeek Key，并通过 DeepSeek 图像输入接口发送待识别图片；密钥不会进入前端代码。
+不要在 Key 两边加引号，也不要把 `.env` 发给别人或提交到 Git。Agent 只从后端读取 API Key；密钥不会进入前端代码。只要设置了 `LLM_GATEWAY_URL`，系统就优先使用比赛 Gateway；否则沿用本机 DeepSeek 配置。
 
 图片识别先在本机自动准备候选区域：Operation 照片优先识别控制屏右上桩号区域，Silo 照片优先定位红色 LED 区域。候选区域无法得到有效结果时自动回退到原图。置信度低于 `VISION_CONFIDENCE_THRESHOLD` 的记录会进入预警，要求工程师在审核 Word 中对照原图。
 
