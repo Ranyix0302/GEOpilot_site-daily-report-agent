@@ -1,4 +1,6 @@
+import os
 import unittest
+from unittest.mock import patch
 
 from agent.app import app
 
@@ -27,6 +29,19 @@ class BilingualUiTests(unittest.TestCase):
             script = app_js.read()
         self.assertIn('class="upload-icon" aria-hidden="true"', script)
         self.assertNotIn('class="upload-icon">↑</span>', script)
+
+    def test_status_names_competition_gateway_provider(self):
+        with patch.dict(os.environ, {
+            "LLM_GATEWAY_URL": "https://api.softwaresystems.app",
+            "LLM_GATEWAY_API_KEY": "test-key",
+            "LLM_MODEL": "competition-model",
+        }, clear=True):
+            response = app.test_client().get("/api/status")
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertEqual(payload["model_provider"], "Competition LLM Gateway")
+        self.assertEqual(payload["model"], "competition-model")
+        self.assertTrue(payload["ready"])
 
 
 if __name__ == "__main__":

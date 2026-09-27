@@ -449,7 +449,8 @@ def home(): return render_template("index.html")
 @app.get("/api/status")
 def status():
     vision=DeepSeekVision()
-    return jsonify({"model_provider":"DeepSeek","model":vision.model,"model_key":vision.available(),"feishu":bool(os.getenv("LARK_APP_ID") and os.getenv("LARK_APP_SECRET")),"ready":vision.available()})
+    provider="Competition LLM Gateway" if vision.gateway_mode else "DeepSeek"
+    return jsonify({"model_provider":provider,"model":vision.model,"model_key":vision.available(),"feishu":bool(os.getenv("LARK_APP_ID") and os.getenv("LARK_APP_SECRET")),"ready":vision.available()})
 
 
 @app.post("/api/runs")
